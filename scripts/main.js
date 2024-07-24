@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
             gridItem.addEventListener('dragstart', dragStart);
             gridItem.addEventListener('dragover', dragOver);
             gridItem.addEventListener('drop', drop);
+            gridItem.addEventListener('touchstart', touchStart);
+            gridItem.addEventListener('touchmove', touchMove);
+            gridItem.addEventListener('touchend', touchEnd);
             gridContainer.appendChild(gridItem);
         }
     };
@@ -62,11 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const drop = (e) => {
         e.preventDefault();
+        handleDrop(e, e.dataTransfer.getData('text/plain'), e.dataTransfer.getData('text/html'));
+    };
+
+    const handleDrop = (e, draggedItemType, draggedItemHTML) => {
         const target = e.target.closest('.grid-item');
         target.classList.remove('drag-over');
-
-        const draggedItemType = e.dataTransfer.getData('text/plain');
-        const draggedItemHTML = e.dataTransfer.getData('text/html');
 
         const targetImg = target.querySelector('img');
         const targetType = targetImg ? targetImg.dataset.type : null;
@@ -74,17 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const draggingElement = document.querySelector('.dragging');
         const originalParent = draggingElement ? draggingElement.parentElement : null;
 
-        // Check if the target is the same as the original parent
         if (target === originalParent) {
             if (draggingElement) {
                 draggingElement.classList.remove('dragging');
             }
-            return; // Do nothing if the item is dropped onto itself
+            return;
         }
 
         if (targetType && targetType === draggedItemType) {
             mergeItems(target, draggedItemType);
-            // Clear the original position
             if (originalParent) {
                 originalParent.innerHTML = '';
             }
@@ -92,14 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
             target.innerHTML = draggedItemHTML;
             const newImg = target.querySelector('img');
             animateEntrance(newImg);
-            // Play drop sound
             dropSound.play();
-            // Clear the original position
             if (originalParent) {
                 originalParent.innerHTML = '';
             }
         } else {
-            // Return the dragged item to its original position
             if (originalParent) {
                 originalParent.innerHTML = draggedItemHTML;
                 const originalImg = originalParent.querySelector('img');
@@ -107,8 +106,42 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Clear the dragging class
         if (draggingElement) {
+            draggingElement.classList.remove('dragging');
+        }
+    };
+
+    const touchStart = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY).closest('.grid-item');
+        const imgElement = target.querySelector('img');
+        if (imgElement) {
+            imgElement.classList.add('dragging');
+            target.dataset.touchType = imgElement.dataset.type;
+            target.dataset.touchHTML = imgElement.outerHTML;
+        }
+    };
+
+    const touchMove = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY).closest('.grid-item');
+        if (target) {
+            target.classList.add('drag-over');
+        }
+    };
+
+    const touchEnd = (e) => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY).closest('.grid-item');
+        const draggingElement = document.querySelector('.dragging');
+
+        if (target && draggingElement) {
+            const draggedItemType = draggingElement.dataset.type;
+            const draggedItemHTML = draggingElement.outerHTML;
+            handleDrop({ target: target }, draggedItemType, draggedItemHTML);
             draggingElement.classList.remove('dragging');
         }
     };
@@ -123,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         animateEntrance(newImg);
         createMergeParticles(target);
         updateMergeCount();
-        // Play merge sound
         mergeSound.play();
     };
 
@@ -215,26 +247,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const showPopup = () => {
         const popup = document.getElementById('popup');
         popup.style.display = 'block';
-        // Play popup sound
         popupSound.play();
-
-        // Add confetti effect
         createConfetti();
-
-        // Close button event listener
         const closeButton = document.getElementById('close-popup');
         closeButton.addEventListener('click', () => {
             popup.style.display = 'none';
         });
-
-        // Redirect on click
         const downloadLink = document.getElementById('download-link');
         downloadLink.addEventListener('click', () => {
             window.location.href = 'https://apps.apple.com/us/app/farm-connect-match-3d-puzzle/id6503044105';
         });
     };
 
-    // New function to create confetti effect
     const createConfetti = () => {
         const confettiCount = 100;
         const colors = ['#FFD700', '#FF6347', '#4682B4', '#32CD32', '#FF69B4'];
@@ -248,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
             confetti.style.animationDelay = `${Math.random() * 2}s`;
             document.body.appendChild(confetti);
         };
-        // Play confetti sound
         confettiSound.play();
     };
 
