@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridContainer = document.querySelector('.grid-container');
     const items = ['1.png', '2.png', '3.png', '4.png', '5.png'];
     let mergeCount = 0;
+    let tutorialStep = 0;
+    let tutorialActive = true;
 
     const mergeSound = document.getElementById('merge-sound');
     const dropSound = document.getElementById('drop-sound');
@@ -26,6 +28,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const placeRandomItems = () => {
         const gridItems = document.querySelectorAll('.grid-item');
         const placedIndexes = [];
+
+        // Ensure we place at least one pair of identical items
+        const guaranteedItem = items[Math.floor(Math.random() * items.length)];
+        let guaranteedIndexes = [];
+        while (guaranteedIndexes.length < 2) {
+            const randomIndex = Math.floor(Math.random() * 25);
+            if (!guaranteedIndexes.includes(randomIndex)) {
+                guaranteedIndexes.push(randomIndex);
+            }
+        }
+
+        for (let index of guaranteedIndexes) {
+            const img = document.createElement('img');
+            img.src = `images/${guaranteedItem}`;
+            img.dataset.type = guaranteedItem.split('.')[0];
+            gridItems[index].appendChild(img);
+            animateEntrance(img);
+            placedIndexes.push(index);
+        }
+
         while (placedIndexes.length < 10) {
             const randomIndex = Math.floor(Math.random() * 25);
             if (!placedIndexes.includes(randomIndex)) {
@@ -109,7 +131,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggingElement) {
             draggingElement.classList.remove('dragging');
         }
+
+        if (tutorialActive) {
+            tutorialStep++;
+            if (tutorialStep === 1) {
+                setTimeout(() => {
+                    animateTutorialHand();
+                }, 1000);
+            } else if (tutorialStep > 1) {
+                tutorialActive = false;
+                document.getElementById('tutorial-hand').remove();
+            }
+        }
     };
+
     let touchDragElement = null;
     let offsetX = 0;
     let offsetY = 0;
@@ -126,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
             touchDragElement.style.width = `${imgElement.clientWidth}px`;
             touchDragElement.style.height = `${imgElement.clientHeight}px`;
 
-            // Remove transition and transform styles
             touchDragElement.style.transition = 'none';
             touchDragElement.style.transform = 'none';
             touchDragElement.style.opacity = '1';
@@ -137,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
             offsetX = touch.clientX - rect.left;
             offsetY = touch.clientY - rect.top;
 
-            // Immediately move the cloned element to the touch position
             moveElementToTouch(touchDragElement, touch.pageX, touch.pageY);
 
             imgElement.classList.add('dragging');
@@ -176,8 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         element.style.left = `${x - offsetX}px`;
         element.style.top = `${y - offsetY}px`;
     };
-
-
 
     const mergeItems = (target, itemType) => {
         const newItemType = getNextItem(itemType);
@@ -281,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const popup = document.getElementById('popup');
         popup.style.display = 'block';
         popupSound.play();
-        createConfetti();
         const closeButton = document.getElementById('close-popup');
         closeButton.addEventListener('click', () => {
             popup.style.display = 'none';
@@ -292,22 +322,78 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    const createConfetti = () => {
-        const confettiCount = 100;
-        const colors = ['#FFD700', '#FF6347', '#4682B4', '#32CD32', '#FF69B4'];
+    const createTutorial = () => {
+        const tutorialHand = document.createElement('img');
+        tutorialHand.src = 'images/hand.png';
+        tutorialHand.id = 'tutorial-hand';
+        tutorialHand.style.width = '150px';
+        tutorialHand.style.height = 'auto';
+        tutorialHand.style.position = 'absolute';
+        tutorialHand.style.zIndex = '1001';
+        tutorialHand.style.transition = 'all 1s ease-in-out';
+        tutorialHand.style.opacity = '0';
+        tutorialHand.style.pointerEvents = 'none'; // Ensure the hand doesn't block mouse events
 
-        for (let i = 0; i < confettiCount; i++) {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti';
-            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.left = `${Math.random() * 100}vw`;
-            confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
-            confetti.style.animationDelay = `${Math.random() * 2}s`;
-            document.body.appendChild(confetti);
-        };
-        confettiSound.play();
+        document.body.appendChild(tutorialHand);
+
+        setTimeout(() => {
+            const gridItems = document.querySelectorAll('.grid-item img');
+            if (gridItems.length > 0) {
+                animateTutorialHand();
+            }
+        }, 3000);
+    };
+
+    const animateTutorialHand = () => {
+        const hand = document.getElementById('tutorial-hand');
+        const gridItems = document.querySelectorAll('.grid-item img');
+        let startItem, endItem;
+
+        // Find two identical items
+        for (let i = 0; i < gridItems.length; i++) {
+            for (let j = i + 1; j < gridItems.length; j++) {
+                if (gridItems[i].src === gridItems[j].src) {
+                    startItem = gridItems[i].parentElement;
+                    endItem = gridItems[j].parentElement;
+                    break;
+                }
+            }
+            if (startItem) break;
+        }
+
+        if (startItem && endItem) {
+            const startRect = startItem.getBoundingClientRect();
+            const endRect = endItem.getBoundingClientRect();
+
+            // Instantly position hand at the start item
+            hand.style.transition = 'none';
+            hand.style.left = `${startRect.left + startRect.width / 2 - 25}px`;
+            hand.style.top = `${startRect.top + startRect.height / 2 - 25}px`;
+            hand.style.opacity = '1';
+
+            // Allow transition for movement to end item
+            setTimeout(() => {
+                hand.style.transition = 'all 1s ease-in-out';
+                hand.style.left = `${endRect.left + endRect.width / 2 - 25}px`;
+                hand.style.top = `${endRect.top + endRect.height / 2 - 25}px`;
+            }, 100);
+
+            // Restart animation
+            setTimeout(() => {
+                hand.style.opacity = '0';
+                setTimeout(() => {
+                    animateTutorialHand();
+                }, 1000);
+            }, 1500);
+        } else {
+            // Retry if no matching items found
+            setTimeout(() => {
+                animateTutorialHand();
+            }, 1000);
+        }
     };
 
     createGridItems();
     placeRandomItems();
+    createTutorial();
 });
