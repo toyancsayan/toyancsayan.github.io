@@ -121,11 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (imgElement) {
             touchDragElement = imgElement.cloneNode(true);
             touchDragElement.classList.add('dragging-clone');
-            touchDragElement.style.width = `${imgElement.clientWidth}px`;
-            touchDragElement.style.height = `${imgElement.clientHeight}px`;
-            touchDragElement.style.left = `${touch.clientX - imgElement.clientWidth / 2}px`;
-            touchDragElement.style.top = `${touch.clientY - imgElement.clientHeight / 2}px`;
             document.body.appendChild(touchDragElement);
+
+            // Ensure element is properly appended and sized before setting the initial position
+            requestAnimationFrame(() => {
+                touchDragElement.style.position = 'absolute';
+                touchDragElement.style.width = `${imgElement.clientWidth}px`;
+                touchDragElement.style.height = `${imgElement.clientHeight}px`;
+                moveElementToTouch(touchDragElement, touch);
+            });
+
             imgElement.classList.add('dragging');
             target.dataset.touchType = imgElement.dataset.type;
             target.dataset.touchHTML = imgElement.outerHTML;
@@ -136,8 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const touch = e.touches[0];
         if (touchDragElement) {
-            touchDragElement.style.left = `${touch.clientX - touchDragElement.clientWidth / 2}px`;
-            touchDragElement.style.top = `${touch.clientY - touchDragElement.clientHeight / 2}px`;
+            moveElementToTouch(touchDragElement, touch);
         }
     };
 
@@ -159,6 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const moveElementToTouch = (element, touch) => {
+        element.style.left = `${touch.pageX - element.clientWidth / 2}px`;
+        element.style.top = `${touch.pageY - element.clientHeight / 2}px`;
+    };
 
 
 
