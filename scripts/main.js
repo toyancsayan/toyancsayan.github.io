@@ -121,8 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (imgElement) {
             touchDragElement = imgElement.cloneNode(true);
             touchDragElement.classList.add('dragging-clone');
-            touchDragElement.style.left = `${touch.clientX - imgElement.width / 2}px`;
-            touchDragElement.style.top = `${touch.clientY - imgElement.height / 2}px`;
+            touchDragElement.style.width = `${imgElement.clientWidth}px`;
+            touchDragElement.style.height = `${imgElement.clientHeight}px`;
+            touchDragElement.style.left = `${touch.clientX - imgElement.clientWidth / 2}px`;
+            touchDragElement.style.top = `${touch.clientY - imgElement.clientHeight / 2}px`;
             document.body.appendChild(touchDragElement);
             imgElement.classList.add('dragging');
             target.dataset.touchType = imgElement.dataset.type;
@@ -134,8 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const touch = e.touches[0];
         if (touchDragElement) {
-            touchDragElement.style.left = `${touch.clientX - touchDragElement.width / 2}px`;
-            touchDragElement.style.top = `${touch.clientY - touchDragElement.height / 2}px`;
+            touchDragElement.style.left = `${touch.clientX - touchDragElement.clientWidth / 2}px`;
+            touchDragElement.style.top = `${touch.clientY - touchDragElement.clientHeight / 2}px`;
         }
     };
 
@@ -156,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             touchDragElement = null;
         }
     };
+
 
 
 
