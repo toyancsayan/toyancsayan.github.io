@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = ['1.png', '2.png', '3.png', '4.png', '5.png'];
     let mergeCount = 0;
 
+    const mergeSound = document.getElementById('merge-sound');
+    const dropSound = document.getElementById('drop-sound');
+    const popupSound = document.getElementById('popup-sound');
+    const confettiSound = document.getElementById('confetti-sound');
+
     const createGridItems = () => {
         for (let i = 0; i < 25; i++) {
             const gridItem = document.createElement('div');
@@ -87,6 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
             target.innerHTML = draggedItemHTML;
             const newImg = target.querySelector('img');
             animateEntrance(newImg);
+            // Play drop sound
+            dropSound.play();
             // Clear the original position
             if (originalParent) {
                 originalParent.innerHTML = '';
@@ -116,6 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
         animateEntrance(newImg);
         createMergeParticles(target);
         updateMergeCount();
+        // Play merge sound
+        mergeSound.play();
     };
 
     const getNextItem = (currentType) => {
@@ -204,40 +213,44 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showPopup = () => {
-    const popup = document.getElementById('popup');
-    popup.style.display = 'block';
+        const popup = document.getElementById('popup');
+        popup.style.display = 'block';
+        // Play popup sound
+        popupSound.play();
 
-    // Add confetti effect
-    createConfetti();
+        // Add confetti effect
+        createConfetti();
 
-    // Close button event listener
-    const closeButton = document.getElementById('close-popup');
-    closeButton.addEventListener('click', () => {
-        popup.style.display = 'none';
-    });
+        // Close button event listener
+        const closeButton = document.getElementById('close-popup');
+        closeButton.addEventListener('click', () => {
+            popup.style.display = 'none';
+        });
 
-    // Redirect on click
-    const downloadLink = document.getElementById('download-link');
-    downloadLink.addEventListener('click', () => {
-        window.location.href = 'https://apps.apple.com/us/app/farm-connect-match-3d-puzzle/id6503044105';
-    });
-};
-
-// New function to create confetti effect
-const createConfetti = () => {
-    const confettiCount = 100;
-    const colors = ['#FFD700', '#FF6347', '#4682B4', '#32CD32', '#FF69B4'];
-
-    for (let i = 0; i < confettiCount; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.left = `${Math.random() * 100}vw`;
-        confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
-        confetti.style.animationDelay = `${Math.random() * 2}s`;
-        document.body.appendChild(confetti);
+        // Redirect on click
+        const downloadLink = document.getElementById('download-link');
+        downloadLink.addEventListener('click', () => {
+            window.location.href = 'https://apps.apple.com/us/app/farm-connect-match-3d-puzzle/id6503044105';
+        });
     };
-};
+
+    // New function to create confetti effect
+    const createConfetti = () => {
+        const confettiCount = 100;
+        const colors = ['#FFD700', '#FF6347', '#4682B4', '#32CD32', '#FF69B4'];
+
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = `${Math.random() * 100}vw`;
+            confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+            confetti.style.animationDelay = `${Math.random() * 2}s`;
+            document.body.appendChild(confetti);
+        };
+        // Play confetti sound
+        confettiSound.play();
+    };
 
     createGridItems();
     placeRandomItems();
