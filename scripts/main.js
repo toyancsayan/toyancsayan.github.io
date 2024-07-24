@@ -164,8 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const moveElementToTouch = (element, touch) => {
-        element.style.left = `${touch.pageX - element.clientWidth / 2}px`;
-        element.style.top = `${touch.pageY - element.clientHeight / 2}px`;
+        const rect = element.getBoundingClientRect();
+        const offsetX = touch.clientX - rect.left - element.clientWidth / 2;
+        const offsetY = touch.clientY - rect.top - element.clientHeight / 2;
+        element.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
     };
 
 
