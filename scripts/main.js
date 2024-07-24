@@ -120,6 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
             imgElement.classList.add('dragging');
             target.dataset.touchType = imgElement.dataset.type;
             target.dataset.touchHTML = imgElement.outerHTML;
+            target.dataset.touchStartX = touch.clientX;
+            target.dataset.touchStartY = touch.clientY;
         }
     };
 
@@ -145,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             draggingElement.classList.remove('dragging');
         }
     };
+
 
     const mergeItems = (target, itemType) => {
         const newItemType = getNextItem(itemType);
