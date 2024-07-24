@@ -16,9 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
             gridItem.addEventListener('dragstart', dragStart);
             gridItem.addEventListener('dragover', dragOver);
             gridItem.addEventListener('drop', drop);
-            gridItem.addEventListener('touchstart', touchStart);
-            gridItem.addEventListener('touchmove', touchMove);
-            gridItem.addEventListener('touchend', touchEnd);
+            gridItem.addEventListener('touchstart', touchStart, { passive: false });
+            gridItem.addEventListener('touchmove', touchMove, { passive: false });
+            gridItem.addEventListener('touchend', touchEnd, { passive: false });
             gridContainer.appendChild(gridItem);
         }
     };
@@ -110,8 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
             draggingElement.classList.remove('dragging');
         }
     };
-
     let touchDragElement = null;
+    let offsetX = 0;
+    let offsetY = 0;
 
     const touchStart = (e) => {
         e.preventDefault();
@@ -121,15 +122,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (imgElement) {
             touchDragElement = imgElement.cloneNode(true);
             touchDragElement.classList.add('dragging-clone');
+            touchDragElement.style.position = 'absolute';
+            touchDragElement.style.width = `${imgElement.clientWidth}px`;
+            touchDragElement.style.height = `${imgElement.clientHeight}px`;
+
+            // Remove transition and transform styles
+            touchDragElement.style.transition = 'none';
+            touchDragElement.style.transform = 'none';
+            touchDragElement.style.opacity = '1';
+
             document.body.appendChild(touchDragElement);
 
-            // Ensure element is properly appended and sized before setting the initial position
-            requestAnimationFrame(() => {
-                touchDragElement.style.position = 'absolute';
-                touchDragElement.style.width = `${imgElement.clientWidth}px`;
-                touchDragElement.style.height = `${imgElement.clientHeight}px`;
-                moveElementToTouch(touchDragElement, touch);
-            });
+            const rect = imgElement.getBoundingClientRect();
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+
+            // Immediately move the cloned element to the touch position
+            moveElementToTouch(touchDragElement, touch.pageX, touch.pageY);
 
             imgElement.classList.add('dragging');
             target.dataset.touchType = imgElement.dataset.type;
@@ -141,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const touch = e.touches[0];
         if (touchDragElement) {
-            moveElementToTouch(touchDragElement, touch);
+            moveElementToTouch(touchDragElement, touch.pageX, touch.pageY);
         }
     };
 
@@ -163,11 +172,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const moveElementToTouch = (element, touch) => {
-        const rect = element.getBoundingClientRect();
-        const offsetX = touch.clientX - rect.left - element.clientWidth / 2;
-        const offsetY = touch.clientY - rect.top - element.clientHeight / 2;
-        element.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+    const moveElementToTouch = (element, x, y) => {
+        element.style.left = `${x - offsetX}px`;
+        element.style.top = `${y - offsetY}px`;
     };
 
 
