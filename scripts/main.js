@@ -111,26 +111,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    let touchDragElement = null;
+
     const touchStart = (e) => {
         e.preventDefault();
         const touch = e.touches[0];
         const target = document.elementFromPoint(touch.clientX, touch.clientY).closest('.grid-item');
         const imgElement = target.querySelector('img');
         if (imgElement) {
+            touchDragElement = imgElement.cloneNode(true);
+            touchDragElement.classList.add('dragging-clone');
+            touchDragElement.style.left = `${touch.clientX - imgElement.width / 2}px`;
+            touchDragElement.style.top = `${touch.clientY - imgElement.height / 2}px`;
+            document.body.appendChild(touchDragElement);
             imgElement.classList.add('dragging');
             target.dataset.touchType = imgElement.dataset.type;
             target.dataset.touchHTML = imgElement.outerHTML;
-            target.dataset.touchStartX = touch.clientX;
-            target.dataset.touchStartY = touch.clientY;
         }
     };
 
     const touchMove = (e) => {
         e.preventDefault();
         const touch = e.touches[0];
-        const target = document.elementFromPoint(touch.clientX, touch.clientY).closest('.grid-item');
-        if (target) {
-            target.classList.add('drag-over');
+        if (touchDragElement) {
+            touchDragElement.style.left = `${touch.clientX - touchDragElement.width / 2}px`;
+            touchDragElement.style.top = `${touch.clientY - touchDragElement.height / 2}px`;
         }
     };
 
@@ -146,7 +151,12 @@ document.addEventListener('DOMContentLoaded', () => {
             handleDrop({ target: target }, draggedItemType, draggedItemHTML);
             draggingElement.classList.remove('dragging');
         }
+        if (touchDragElement) {
+            document.body.removeChild(touchDragElement);
+            touchDragElement = null;
+        }
     };
+
 
 
     const mergeItems = (target, itemType) => {
