@@ -10,7 +10,7 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-image: url('../images/farm-background.png');
+    background-image: url('../images/farm-background.jpg');
     background-size: cover;
     background-position: center;
     font-family: 'Roboto Slab', serif;
