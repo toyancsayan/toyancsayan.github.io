@@ -77,9 +77,7 @@
     <audio id="boosterSound" src="https://assets.mixkit.co/sfx/download/mixkit-winning-bleeps-2012.wav"></audio>
     <audio id="coinSound" src="https://www.zedge.net/find/ringtones/coin%20sound"></audio>
     <script>
-
-
-$.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
+        $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
             .done(function(script, textStatus) {
                 console.log("Three.js loaded successfully.");
                 $.getScript("https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.2/nipplejs.min.js")
@@ -101,6 +99,7 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
             .fail(function(jqxhr, settings, exception) {
                 console.error("Failed to load Three.js.");
             });
+
         let mixer;
         let particleSystem;
         let cube;
@@ -108,10 +107,10 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
         let bullets = [];
         let score = 0;
         let playerHealth = 100;
-        let isUpgraded = false;
         let coins = [];
 
-        const upgradeThreshold = 50; 
+        let upgradeLevel = 0;
+        const upgradeThreshold = 50;
         let currentUpgradeProgress = 0;
 
         const hitSound = document.getElementById('hitSound');
@@ -175,7 +174,7 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
             scene.add(particleSystem);
 
             const enemies = [];
-            const enemySpeed = 0.2; 
+            let enemySpeed = 0.02; 
 
             function createHealthBar(enemy) {
                 const healthBarWidth = 2;
@@ -204,21 +203,25 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 enemy.healthBar.position.x = (healthPercentage - 1) * 1;
             }
 
-            function spawnEnemy() {
-                const enemyGeometry = new THREE.BoxGeometry(1, 5, 1);
-                const enemyMaterial = new THREE.MeshPhongMaterial({ color: 0x800080 }); 
-                const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
-                enemy.position.set(
-                    Math.random() * 100 - 50,
-                    2.5,
-                    Math.random() * 100 - 50
-                );
-                createHealthBar(enemy);
-                enemies.push(enemy);
-                scene.add(enemy);
-            }
+    function spawnEnemy() {
+    console.log("Trying to spawn an enemy..."); // Log when spawnEnemy is called
+    const enemyGeometry = new THREE.BoxGeometry(1, 5, 1);
+    const enemyMaterial = new THREE.MeshPhongMaterial({ color: 0x800080 }); 
+    const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+    enemy.position.set(
+        Math.random() * 100 - 50,
+        2.5,
+        Math.random() * 100 - 50
+    );
+    createHealthBar(enemy);
+    enemies.push(enemy);
+    scene.add(enemy);
+}
 
-            setInterval(spawnEnemy, 3000);
+let spawnInterval = 1000;
+let spawnEnemyInterval = setInterval(spawnEnemy, spawnInterval); 
+
+         
 
             const boosters = [];
             function spawnBooster() {
@@ -278,7 +281,7 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 const sphereGeometry = new THREE.SphereGeometry(0.5, 8, 8);
                 const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
-                const sphereDistance = isUpgraded ? 3 : 2; 
+                const sphereDistance = upgradeLevel > 0 ? 3 : 2;
 
                 for (let i = 0; i < 4; i++) {
                     const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
@@ -290,7 +293,7 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
 
             function updateRotatingSpheres() {
                 const time = Date.now() * 0.002;
-                const radius = isUpgraded ? 3 : 2;
+                const radius = upgradeLevel > 0 ? 3 : 2;
 
                 rotatingSpheres.forEach((sphere, index) => {
                     const angle = time + (index * Math.PI / 2);
@@ -337,8 +340,9 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 });
             }
 
+            let bulletRadius = 3; 
             function shootBullet() {
-                const bulletGeometry = new THREE.SphereGeometry(3, 3, 3);
+                const bulletGeometry = new THREE.SphereGeometry(bulletRadius, bulletRadius, bulletRadius);
                 const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffa500 });
                 const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
 
@@ -351,8 +355,8 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 scene.add(bullet);
             }
 
+            let bulletSpeed = 0.5; 
             function updateBullets() {
-                const bulletSpeed = 0.5;
                 bullets.forEach((bullet, index) => {
                     bullet.position.addScaledVector(bullet.userData.direction, bulletSpeed);
 
@@ -363,43 +367,43 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 });
             }
 
-            const raycaster = new THREE.Raycaster(); 
-            function checkBulletCollisions() {
-    const raycaster = new THREE.Raycaster(); 
+            const raycaster = new THREE.Raycaster();
+           function checkBulletCollisions() {
+    const sphereRadius = 2; // Adjust this value to increase or decrease the collision area
 
     bullets.forEach((bullet, bulletIndex) => {
-        // Calculate the direction the bullet is moving
-        const direction = bullet.userData.direction.clone(); 
-        raycaster.set(bullet.position.clone().sub(direction), direction); // Cast ray backwards
+        const bulletSphere = new THREE.Sphere(bullet.position, sphereRadius);
 
-        const intersects = raycaster.intersectObjects(enemies); 
+        enemies.forEach((enemy, enemyIndex) => {
+            const enemyBoundingBox = new THREE.Box3().setFromObject(enemy);
+            const enemyBoundingSphere = enemyBoundingBox.getBoundingSphere(new THREE.Sphere());
 
-        if (intersects.length > 0) {
-           
-                        const enemy = intersects[0].object;
-                        hitSound.play();
-                        scene.remove(bullet);
-                        bullets.splice(bulletIndex, 1);
+            if (bulletSphere.intersectsSphere(enemyBoundingSphere)) {
+                hitSound.play();
+                scene.remove(bullet);
+                bullets.splice(bulletIndex, 1);
 
-                        enemy.health -= 20; 
-                        updateHealthBar(enemy);
+                enemy.health -= 20;
+                updateHealthBar(enemy);
 
-                        enemy.material.color.set(0xff0000);
-                        setTimeout(() => {
-                            enemy.material.color.set(0x800080);
-                        }, 500);
+                enemy.material.color.set(0xff0000);
+                setTimeout(() => {
+                    enemy.material.color.set(0x800080);
+                }, 500);
 
-                        if (enemy.health <= 0) {
-                            scene.remove(enemy);
-                            enemies.splice(enemies.indexOf(enemy), 1); 
-                            console.log('Enemy destroyed!');
-                            score += 10;
-                            spawnCoins(enemy.position);
-                            updateUI();
-                        }
-                    }
-                });
+                if (enemy.health <= 0) {
+                    scene.remove(enemy);
+                    enemies.splice(enemyIndex, 1);
+                    console.log('Enemy destroyed!');
+                    score += 10;
+                    spawnCoins(enemy.position);
+                    updateUI();
+                }
             }
+        });
+    });
+}
+
 
             function checkCoinCollisions() {
                 if (cube) {
@@ -412,9 +416,9 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                             coins.splice(coinIndex, 1);
                             score += 1;
 
-                            currentUpgradeProgress += 10; 
-                            if (currentUpgradeProgress > upgradeThreshold) {
-                                currentUpgradeProgress = 0;
+                            currentUpgradeProgress += 10;
+                            if (currentUpgradeProgress >= upgradeThreshold) {
+                                upgradePlayer();
                             }
                             updateUpgradeSlider();
                         }
@@ -470,14 +474,10 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
             function updateUpgradeSlider() {
                 const upgradePercentage = (currentUpgradeProgress / upgradeThreshold) * 100;
                 document.getElementById('upgrade-progress').style.width = upgradePercentage + '%';
-
-                if (currentUpgradeProgress >= upgradeThreshold && !isUpgraded) {
-                    upgradePlayer();
-                }
             }
 
             function upgradePlayer() {
-                isUpgraded = true;
+                upgradeLevel++;
                 currentUpgradeProgress = 0;
                 updateUpgradeSlider();
 
@@ -485,13 +485,27 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 upgradeText.style.opacity = 1;
                 setTimeout(() => {
                     upgradeText.style.opacity = 0;
-                }, 2000); 
+                }, 2000);
 
-                createUpgradeParticles(cube.position); 
+                createUpgradeParticles(cube.position);
 
-                rotatingSpheres.forEach(sphere => {
-                    sphere.material.color.set(0xffff00);
-                });
+                switch (upgradeLevel) {
+                    case 1:
+                        // First upgrade: Start shooting bullets
+                        rotatingSpheres.forEach(sphere => {
+                            sphere.material.color.set(0xffff00);
+                        });
+                        break;
+                    case 2:
+                        // Second upgrade: Increase bullet size
+                        bulletRadius = 0.2;
+                        break;
+                    case 3:
+                        // Third upgrade: Increase bullet speed
+                        bulletSpeed = 1;
+                        break;
+                    // Add more cases for further upgrades
+                }
             }
 
             function createUpgradeParticles(position) {
@@ -530,54 +544,64 @@ $.getScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js")
                 animateParticles();
             }
 
-            function animate() {
-                requestAnimationFrame(animate);
+           let lastShootTime = 0;
+const shootInterval = 1000; // Shoot a bullet every 1000 milliseconds (1 second)
 
-                if (cube) {
-                    cube.position.x += joystickDeltaX * 0.2;
-                    cube.position.z += joystickDeltaY * 0.2;
-                    
-                    if (joystickDeltaX !== 0 || joystickDeltaY !== 0) {
-                        cube.rotation.y = Math.atan2(joystickDeltaX, joystickDeltaY);
-                    }
-                }
+function animate(time) {
+    requestAnimationFrame(animate);
 
-                if (isUpgraded) {
-                    updateBullets();
-                    checkBulletCollisions();
+    if (cube) {
+        cube.position.x += joystickDeltaX * 0.2;
+        cube.position.z += joystickDeltaY * 0.2;
 
-                    if (Math.random() < 0.05) {
-                        shootBullet();
-                    }
-                }
-                
-                moveEnemiesTowardsCube();
-                updateCamera();
-                checkBoosterCollisions();
-                checkSphereCollisions();
-                updateRotatingSpheres();
-                checkCoinCollisions();
-
-                if (mixer) {
-                    mixer.update(0.01);
-                }
-
-                const positions = particleSystem.geometry.attributes.position.array;
-                for (let i = 1; i < positions.length; i += 3) {
-                    positions[i] -= 0.1;
-                    if (positions[i] < 0) {
-                        positions[i] = 100;
-                    }
-                }
-                particleSystem.geometry.attributes.position.needsUpdate = true;
-
-                renderer.render(scene, camera);
-            }
-
-            animate();
+        if (joystickDeltaX !== 0 || joystickDeltaY !== 0) {
+            cube.rotation.y = Math.atan2(joystickDeltaX, joystickDeltaY);
         }
+    }
 
+    if (upgradeLevel > 0) {
+        updateBullets();
+        checkBulletCollisions();
 
+        // Use the time parameter to ensure bullets are shot at uniform intervals
+        if (time - lastShootTime >= shootInterval) {
+            shootBullet();
+            lastShootTime = time; // Reset the shoot timer
+        }
+    }
+
+    moveEnemiesTowardsCube();
+    updateCamera();
+    checkBoosterCollisions();
+    checkSphereCollisions();
+    updateRotatingSpheres();
+    checkCoinCollisions();
+
+    if (mixer) {
+        mixer.update(0.01);
+    }
+
+    const positions = particleSystem.geometry.attributes.position.array;
+    for (let i = 1; i < positions.length; i += 3) {
+        positions[i] -= 0.1;
+        if (positions[i] < 0) {
+            positions[i] = 100;
+        }
+    }
+    particleSystem.geometry.attributes.position.needsUpdate = true;
+
+    // Increase enemy spawn frequency over time
+
+    // Increase enemy speed over time
+    if (enemySpeed < 0.2) { 
+        enemySpeed += 0.0001; 
+    }
+    renderer.render(scene, camera);
+}
+
+animate();
+
+        }
     </script>
 </body>
 </html>
