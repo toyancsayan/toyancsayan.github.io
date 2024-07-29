@@ -54,7 +54,7 @@ body, html {
     position: fixed;
     overflow: hidden;
     z-index: 1;
- 
+    transform: translateY(5vh); /* Start 15% from the top of the viewport */
 }
 
 @media (max-width: 1200px) {
@@ -524,19 +524,19 @@ body, html {
 /* Media Queries for Responsive Anchored Image */
 @media (max-width: 1200px) {
     .anchored-image {
-        width: 50%; /* Increased for better visibility on smaller screens */
+        width: 40%; /* Increased for better visibility on smaller screens */
     }
 }
 
 @media (max-width: 768px) {
     .anchored-image {
-        width: 50%; /* Increased for better visibility on smaller screens */
+        width: 40%; /* Increased for better visibility on smaller screens */
     }
 }
 
 @media (max-width: 480px) {
     .anchored-image {
-        width: 60%; /* Increased for better visibility on smaller screens */
+        width: 50%; /* Increased for better visibility on smaller screens */
     }
 }
 
