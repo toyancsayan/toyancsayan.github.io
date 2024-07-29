@@ -94,7 +94,8 @@ body, html {
         flex-direction: column;
         justify-content: flex-start; /* Align items to the top */
         align-items: center;
-        padding-bottom: -30vh; /* Start 15% from the top of the viewport */
+        padding-bottom: -30vh;
+        transform: translateY(5vh); /* Start 15% from the top of the viewport */
     }
 }
 
