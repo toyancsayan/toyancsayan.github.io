@@ -51,37 +51,36 @@ body, html {
     justify-content: space-around;
     align-items: center;
     border-radius: 50px;
-    position: relative;
+    position: fixed;
     overflow: hidden;
     z-index: 1;
-    transform: translateY(6vh);
+ 
 }
 
 @media (max-width: 1200px) {
     .game-container {
         width: 70vw;
-
-    }
-}
-
-@media (max-width: 768px) {
-    .game-container {
-        width: 80vw;
-    
-    }
-}
-
-/* Media query for devices with max width of 480px */
-@media (max-width: 480px) {
-    .game-container {
-        width: 90vw;
         height: 60vh; /* Ensure the height is set to cover 60% of the viewport height */
         margin: 0 auto; /* Center horizontally */
         display: flex;
         flex-direction: column;
         justify-content: flex-start; /* Align items to the top */
         align-items: center;
-        padding-bottom: 25vh; /* Start 15% from the top of the viewport */
+        padding-bottom: 15vh; /* Start 15% from the top of the viewport */
+    }
+}
+
+@media (max-width: 768px) {
+    .game-container {
+        width: 80vw;
+        height: 60vh; /* Ensure the height is set to cover 60% of the viewport height */
+        margin: 0 auto; /* Center horizontally */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start; /* Align items to the top */
+        align-items: center;
+        padding-bottom: 15vh;
+       /* Start 15% from the top of the viewport */
     }
 }
 
@@ -89,14 +88,17 @@ body, html {
 @media (max-width: 480px) {
     .game-container {
         width: 90vw;
-        margin-top: 0vh; /* Increase the top margin to 30% to avoid overlap */
-        margin-bottom: 10vh; /* Adjust the bottom margin if necessary */
+        height: 56vh; /* Ensure the height is set to cover 60% of the viewport height */
+        margin: 0 auto; /* Center horizontally */
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
+        justify-content: flex-start; /* Align items to the top */
         align-items: center;
+        padding-bottom: -30vh; /* Start 15% from the top of the viewport */
     }
 }
+
+
 
 /* Styles for the grid container */
 .grid-container {
@@ -107,6 +109,7 @@ body, html {
     width: 100%; /* Match the width of the game container */
     height: 100%; /* Match the height of the game container */
     padding: 3vmin 2vmin;
+    z-index: 1;
     background-color: #DEB887;
     border-radius: 15px;
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
@@ -175,7 +178,7 @@ body, html {
     max-width: 85%;
     max-height: 85%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 2;
     transition: transform 0.3s ease;
     filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
 }
@@ -511,15 +514,30 @@ body, html {
     bottom: 2%;
     left: 25%; /* Center the image horizontally */
     transform: translateX(-50%);
-    width: 75%;
+    width: 55%;
     height: auto;
-    z-index: 1000;
+    z-index: 0;
     transition: bottom 0.3s ease-in-out; /* Smooth transition effect */
 }
 
-    .anchored-image:hover {
-        bottom: 12%; /* Move up by 30% when hovered */
+/* Media Queries for Responsive Anchored Image */
+@media (max-width: 1200px) {
+    .anchored-image {
+        width: 50%; /* Increased for better visibility on smaller screens */
     }
+}
+
+@media (max-width: 768px) {
+    .anchored-image {
+        width: 50%; /* Increased for better visibility on smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .anchored-image {
+        width: 60%; /* Increased for better visibility on smaller screens */
+    }
+}
 
 
 /* Punch animation */
@@ -582,24 +600,7 @@ body, html {
         transform: translateY(-20px);
     }
 }
-/* Media Queries for Responsive Anchored Image */
-@media (max-width: 1200px) {
-    .anchored-image {
-        width: 80%; /* Increased for better visibility on smaller screens */
-    }
-}
 
-@media (max-width: 768px) {
-    .anchored-image {
-        width: 85%; /* Increased for better visibility on smaller screens */
-    }
-}
-
-@media (max-width: 480px) {
-    .anchored-image {
-        width: 90%; /* Increased for better visibility on smaller screens */
-    }
-}
 
 
 /* Styles for specific image */

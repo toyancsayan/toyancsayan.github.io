@@ -281,7 +281,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showLevelUpAnimation();
 
             if (characterLevel === maxCharacterLevel) {
-                showPopup();
+
+                setTimeout(() => {
+                    showPopup();
+                    }
+                , 3000);
+               
             }
         }
     };
@@ -302,12 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 300); // Duration of the punch animation
     };
 
+    let popUpshown = false;
+
     const showPopup = () => {
         const popup = document.getElementById('popup');
         if (popup) {
             popup.style.display = 'block';
             popupSound.play();
-
+            popUpshown = true;
             const closeButton = document.getElementById('close-popup');
             if (closeButton) {
                 closeButton.addEventListener('click', () => {
@@ -365,7 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (startItem) break;
         }
 
-        if (startItem && endItem) {
+        if (startItem && endItem)
+        {
             const startRect = startItem.getBoundingClientRect();
             const endRect = endItem.getBoundingClientRect();
 
@@ -382,6 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hand.style.top = `${endRect.top + endRect.height / 2 - 25}px`;
             }, 100);
 
+            if (!popUpshown) { 
             // Restart animation
             setTimeout(() => {
                 hand.style.opacity = '0';
@@ -389,6 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     animateTutorialHand();
                 }, 1000);
             }, 1500);
+            }
         } else {
             // Retry if no matching items found
             setTimeout(() => {
