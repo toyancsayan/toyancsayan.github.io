@@ -2,53 +2,1428 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=300,height=250,initial-scale=1.0">
+    <meta name="ad.orientation" content="portrait">
+    <meta name="ad.size" content="width=300,height=250">
     <title>Farm Merge</title>
-    <link rel="stylesheet" href="styles/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.css">
+    <div class="recommended-recipe">
+        <div class="recipe-title">Invest to Win</div>
+        <div class="recipe-items">
+            <!-- Boş bırakılmış öğeler dinamik olarak yüklenecek -->
+        </div>
+    </div>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #1B5E20;
+            --tertiary-color: #2196F3;
+            --text-color: #FFFFFF;
+            --grid-color: #81C784;
+            --grid-border: #33691E;
+            --popup-bg: #DCEDC8;
+            --popup-border: #689F38;
+            --button-color: #8BC34A;
+            --button-hover: #7CB342;
+            --item-color: rgba(255, 255, 255, 0.2);
+            --item-border: rgba(255, 255, 255, 0.3);
+            --hover-color: rgba(255, 255, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Prevent scrolling */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-color);
+            position: relative;
+            background-size: cover;
+            background-position: center;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--tertiary-color));
+            opacity: 0.1;
+            filter: blur(3px);
+            z-index: -2;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: -1;
+            filter: blur(3px); /* Add blur to the overlay */
+        }
+
+        .background-image-blur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -3; /* Ensure it is below other elements */
+            filter: blur(3px); /* Add blur to the background image */
+            background-size: cover;
+            background-position: center;
+        }
+
+        .game-container {
+            width: 70vw;
+            height: 60vw;
+            max-width: 90vmin;
+            max-height: 90vmin;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            border-radius: 30px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transform: translateY(15vh);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 0.5vmin;
+            width: 90%;
+            height: 65%;
+            padding: 1vmin 2vmin 0;
+            background-color: var(--grid-color);
+            border-radius: 15px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+            border: 5px solid var(--grid-border);
+            position: relative;
+        }
+
+        .grid-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.1)),
+                        linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%, rgba(255,255,255,0.1));
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        .grid-item {
+            background-color: var(--item-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            aspect-ratio: 1 / 1;
+            border: 4px solid var(--item-border);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .grid-item img {
+            max-height: 125%;
+            pointer-events: none;
+            z-index: 1;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .grid-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .grid-item:hover img {
+            transform: scale(1.15);
+        }
+
+        .dragging {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
+
+        .drag-over {
+            background-color: var(--secondary-color);
+            box-shadow: 0 0 20px var(--tertiary-color);
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+.popup-content {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 20px;
+            text-align: center;
+            max-width: 80%;
+            width: 400px;
+        }
+
+        @keyframes popInAndBounce {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            80% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        .close {
+            color: var(--text-color);
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close:hover {
+            transform: scale(1.2);
+        }
+
+        .image-container {
+            width: 100%;
+            height: auto;
+            margin: 10px 0;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            display: block;
+        }
+
+        #download-link {
+            display: inline-block;
+            background-color: var(--button-color);
+            color: white;
+            padding: 12px 24px;
+            font-size: 18px;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #download-link:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+            animation: pulseButton 1s infinite;
+        }
+
+        @keyframes pulseButton {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes floatAround {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(10px, -10px) rotate(360deg); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            z-index: 1000;
+            animation: fall linear forwards;
+        }
+
+        .dragging-clone {
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0.7;
+            transform: scale(1.1);
+            will-change: left, top;
+            transition: none !important;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+
+        .recommended-recipe {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 45%;
+            max-width: 600px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(27, 94, 32, 0.9));
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 3px solid #ffffff; /* Beyaz, kalın bir border ekler */
+            outline: 2px solid rgba(255, 255, 255, 0.5); /* Dış çizgi ekler */
+            outline-offset: -10px; /* Değer -10px olmalıdır */
+        }
+
+        .recommended-recipe::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: rotate(30deg);
+            pointer-events: none;
+            animation: shine 8s infinite linear;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .recommended-recipe:hover {
+            transform: translateX(-50%) scale(1.03);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), inset 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+
+        .recipe-title {
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .recommended-recipe p {
+            color: #e8f5e9;
+            font-size: 1.1em;
+            line-height: 1.6;
+            text-align: center;
+            max-width: 90%;
+            margin-bottom: 20px;
+        }
+
+        .recipe-items {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: auto;
+            white-space: nowrap;
+            width: 100%;
+            padding: 10px 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--secondary-color) var(--primary-color);
+        }
+
+        .recipe-items::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .recipe-items::-webkit-scrollbar-track {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .recipe-items::-webkit-scrollbar-thumb {
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        .recipe-item {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+            padding: 10px;
+            background-color: var(--item-color);
+            border: 2px solid var(--item-border);
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .recipe-item:hover {
+            transform: translateY(-5px) scale(1.05);
+            background-color: var(--hover-color);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .recipe-item img {
+            width: 100%;
+            max-width: 9vmin;
+            height: auto;
+            pointer-events: none;
+            margin-bottom: 5px;
+        }
+
+        .recipe-item span {
+            font-size: 0.9em;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .recipe-arrow {
+            font-size: 24px;
+            color: var(--text-color);
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .recipe-arrow:hover {
+            transform: scale(1.2);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .logo-container {
+            position: fixed;
+            top: 100px;
+            right: 100px;
+            z-index: 1001;
+        }
+
+        .logo-container img {
+            width: 10vw;
+            height: auto;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .anchored-image {
+            position: fixed;
+            bottom: 20px;
+            left: 0px;
+            width: 33vw;
+            height: auto;
+            z-index: 1000;
+            filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.3));
+        }
+
+        @keyframes punch {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .punch-animation {
+            animation: punch 0.3s ease-in-out;
+        }
+
+        @keyframes sway {
+            0% { transform: translateX(-5px) translateY(-5px); }
+            100% { transform: translateX(5px) translateY(5px); }
+        }
+
+        @media (max-width: 1200px) {
+            .game-container {
+                width: 70vw;
+                height: 70vw;
+                max-width: 90vmin;
+                max-height: 90vmin;
+            }
+
+            .recommended-recipe {
+                width: 80%;
+                max-width: 500px;
+            }
+
+            .recipe-title {
+                font-size: clamp(18px, 3vw, 22px);
+            }
+
+            .recipe-item img {
+                max-width: clamp(5vmin, 7vw, 7vmin);
+            }
+
+            .recipe-arrow {
+                font-size: clamp(18px, 3vw, 22px);
+            }
+
+            .logo-container img {
+                width: clamp(6vw, 8vw, 10vw);
+            }
+
+            .anchored-image {
+                width: clamp(15vw, 20vw, 25vw);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                width: 85vw;
+                height: 85vw;
+                max-width: 95vmin;
+                max-height: 95vmin;
+                transform: translateY(15vh);
+            }
+
+            .recommended-recipe {
+                width: 90%;
+                top: 5%;
+            }
+
+            .recipe-title {
+                font-size: clamp(14px, 2.5vw, 18px);
+            }
+
+            .recipe-item {
+                padding: 8px;
+                margin: 0 5px;
+            }
+
+            .recipe-item img {
+                max-width: clamp(4vmin, 5vw, 6vmin);
+            }
+
+            .recipe-arrow {
+                font-size: clamp(16px, 2.5vw, 20px);
+            }
+
+            .logo-container img {
+                width: clamp(8vw, 10vw, 12vw);
+            }
+
+            .anchored-image {
+                width: clamp(18vw, 25vw, 30vw);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                width: 100vw;
+                height: 100vw;
+                max-width: 100vmin;
+                max-height: 100vmin;
+                transform: translateY(4vh);
+            }
+
+            .recommended-recipe {
+                width: 90%;
+                top: 16%;
+            }
+
+            .recipe-title {
+                font-size: clamp(16px, 4vw, 18px);
+                margin-bottom: 10px;
+            }
+
+            .recipe-item {
+                padding: 6px;
+                margin: 0 3px;
+            }
+
+            .recipe-item img {
+                max-width: clamp(8vmin, 10vw, 12vmin);
+            }
+
+            .recipe-arrow {
+                font-size: clamp(14px, 3vw, 16px);
+            }
+
+            .logo-container {
+                left: 47%;
+                transform: translateX(-35%);
+                top: 10px;
+            }
+
+            .logo-container img {
+                width: clamp(15vw, 20vw, 25vw);
+        	left: 15px;
+        	position: relative;
+	        top: 18px;
+            }
+
+            .anchored-image {
+                left: -15%;
+                width: clamp(50vw, 40vw, 60vw);
+            }
+        }
+
+        @media (max-width: 428px) {
+            .recommended-recipe {
+                width: 90%;
+                top: 10%;
+            }
+        }
+
+
+        @media (max-width: 380px) {
+            .game-container {
+                width: 100vw;
+                height: 100vw;
+                max-width: 100vmin;
+                max-height: 100vmin;
+                transform: translateY(0vh);
+            }
+
+            .recommended-recipe {
+                width: 90%;
+                top: 8%;
+            }
+
+            .recipe-title {
+                font-size: clamp(16px, 4vw, 18px);
+                margin-bottom: 10px;
+            }
+
+            .recipe-item {
+                padding: 6px;
+                margin: 0 3px;
+            }
+
+            .recipe-item img {
+                max-width: clamp(8vmin, 10vw, 12vmin);
+            }
+
+            .recipe-arrow {
+                font-size: clamp(14px, 3vw, 16px);
+            }
+
+            .anchored-image {
+                left: -20%;
+                width: clamp(50vw, 60vw, 70vw);
+            }
+
+        }
+
+        @media (max-width: 320px) {
+            .game-container {
+                width: 100vw;
+                height: 100vw;
+                max-width: 100vmin;
+                max-height: 100vmin;
+                transform: translateY(0vh);
+            }
+
+            .recommended-recipe {
+                width: 90%;
+                top: 15%;
+            }
+
+            .recipe-title {
+                font-size: clamp(16px, 4vw, 18px);
+                margin-bottom: 10px;
+            }
+
+            .recipe-item {
+                padding: 6px;
+                margin: 0 3px;
+            }
+
+            .recipe-item img {
+                max-width: clamp(8vmin, 10vw, 12vmin);
+            }
+
+            .recipe-arrow {
+                font-size: clamp(14px, 3vw, 16px);
+            }
+
+            .anchored-image {
+                left: -20%;
+                width: clamp(60vw, 70vw, 80vw);
+            }
+            .logo-container {
+                left: 47%;
+                transform: translateX(-35%);
+                top: 10px;
+                width: clamp(20vw, 30vw, 40vw);
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            .game-container {
+                width: 60vh;
+                height: 60vh;
+                transform: translateY(10vh);
+            }
+
+            .recommended-recipe {
+                width: 70%;
+                top: 5%;
+                padding: 10px;
+            }
+
+            .recipe-title {
+                font-size: clamp(14px, 3vh, 16px);
+            }
+
+            .recipe-item img {
+                max-width: clamp(4vh, 5vw, 6vh);
+            }
+
+            .logo-container img {
+                width: clamp(10vh, 15vw, 20vh);
+            }
+
+            .anchored-image {
+                width: clamp(25vh, 30vw, 35vh);
+                bottom: -10px;
+                left: -5%;
+            }
+        }
+
+        /* Falling Money Animation */
+        .falling-money {
+            position: fixed;
+            top: -10%;
+            width: 50px; /* Adjust size as needed */
+            height: auto;
+            z-index: 1100;
+            opacity: 0.8;
+            pointer-events: none; /* Prevent mouse interactions */
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        .invest-button-container {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1200;
+            text-align: center;
+        }
+
+        .invest-button {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 24px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .invest-button:before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255,255,255,0.1);
+            transform: rotate(45deg);
+            z-index: -1;
+            transition: all 0.6s ease;
+        }
+
+        .invest-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .invest-button:hover:before {
+            left: -100%;
+            top: -100%;
+        }
+
+        .invest-button-text {
+            font-size: 14px;
+            color: #333;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 </head>
 <body>
-    <div class="recommended-recipe">
-        <div class="recipe-title">Recommended recipe</div>
-        <div class="recipe-items">
-            <div class="recipe-item"><img src="images/1.png" alt="Recipe Item 1" class="no-click"></div>
-            <div class="recipe-arrow">→</div>
-            <div class="recipe-item"><img src="images/2.png" alt="Recipe Item 2" class="no-click"></div>
-            <div class="recipe-arrow">→</div>
-            <div class="recipe-item"><img src="images/3.png" alt="Recipe Item 3" class="no-click"></div>
-            <div class="recipe-arrow">→</div>
-            <div class="recipe-item"><img src="images/4.png" alt="Recipe Item 4" class="no-click"></div>
-        </div>
-    </div>
-    <!-- Logo container -->
-    <div class="logo-container">
-        <img src="images/logo.png" alt="Game Logo">
+    <div class="logo-container" id="main-logo-container">
+        <img id="logo" alt="Game Logo">
     </div>
     <div class="game-container">
-        <div class="grid-container">
-            <!-- Grid items will be generated by JavaScript -->
-        </div>
+        <div class="grid-container"></div>
     </div>
     <div id="popup" class="popup">
         <div class="popup-content">
-            <span id="close-popup" class="close">×</span>
-            <div class="image-container">
-                <img src="images/farm-background.jpg" alt="Farm Background">
+            <div class="logo-container" id="popup-logo">
+                <!-- Logo clone will be inserted here -->
             </div>
-            <a href="https://apps.apple.com/us/app/farm-connect-match-3d-puzzle/id6503044105" id="download-link">Tıkla ve indir</a>
+            <div class="invest-button">
+        <button class="invest-button" id="invest-button">Invest Now</button>
+        <p class="invest-button-text">Click to start your investment journey!</p>
+    </div>
+
         </div>
     </div>
-    <!-- Merge count display -->
     <div id="merge-count" style="display:none;"></div>
-    <!-- Audio elements for sound effects -->
-    <audio id="merge-sound" src="sounds/merge.mp3" preload="auto"></audio>
-    <audio id="drop-sound" src="sounds/drop.mp3" preload="auto"></audio>
-    <audio id="popup-sound" src="sounds/popup.mp3" preload="auto"></audio>
-    <audio id="confetti-sound" src="sounds/confetti.mp3" preload="auto"></audio>
+    <audio id="merge-sound" preload="auto"></audio>
+    <audio id="drop-sound" preload="auto"></audio>
+    <audio id="popup-sound" preload="auto"></audio>
+    <audio id="confetti-sound" preload="auto"></audio>
+    <img alt="Anchored Image" class="anchored-image" id="anchored-image">
+    <script>
+        $(document).ready(function () {
+            $('#logo').attr('src', 'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/papara_icon.png');
+            $('#popup-image').attr('src', 'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/PaparaPopUp.png');
+            $('#merge-sound').attr('src', 'https://storage.googleapis.com/handler-reflections/merge.mp3');
+            $('#drop-sound').attr('src', 'https://storage.googleapis.com/handler-reflections/drop.mp3');
+            $('#popup-sound').attr('src', 'https://storage.googleapis.com/handler-reflections/popup.mp3');
+            $('#confetti-sound').attr('src', 'https://storage.googleapis.com/handler-reflections/confetti.mp3');
+            $('#anchored-image').attr('src', 'https://storage.googleapis.com/handler-reflections/Character.png');
+            const moneyImageSrc = 'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/money.png'; // Image for money rain
 
-    <!-- Anchored image -->
-    <img src="images/Character.png" alt="Game Character" class="anchored-image">
+            // Add Tutorial Hand using jQuery
+            const tutorialHand = $('<img>', {
+                src: 'https://storage.googleapis.com/handler-reflections/hand.png',
+                id: 'tutorial-hand',
+                css: {
+                    width: '150px',
+                    height: 'auto',
+                    position: 'absolute',
+                    zIndex: '1001',
+                    transition: 'all 1s ease-in-out',
+                    opacity: '0',
+                    pointerEvents: 'none' // Prevent mouse events on the hand
+                }
+            }).appendTo('body');
 
-    <script src="scripts/main.js"></script>
+            // Create a div to hold the blurred background image
+            const backgroundImageBlur = $('<div>', {
+                class: 'background-image-blur'
+            }).appendTo('body');
+
+            $('<img>').attr('src', 'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/PaparaBackground.png').on('load', function () {
+                backgroundImageBlur.css('background-image', 'url(' + $(this).attr('src') + ')');
+            });
+
+            const items = [
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/1.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/2.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/3.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/4.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/5.jpg'
+            ];
+
+            const recipeImages = [
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/1.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/2.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/3.jpg',
+                'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/4.jpg'
+            ];
+
+            const gridContainer = $('.grid-container');
+            const recipeContainer = $('.recipe-items');
+            let mergeCount = 0;
+            let tutorialStep = 0;
+            let tutorialActive = true;
+
+            const character1Img = 'https://storage.googleapis.com/handler-reflections/Character1.png';
+            const character2Img = 'https://storage.googleapis.com/handler-reflections/Character2.png';
+
+            const createGridItems = () => {
+                for (let i = 0; i < 24; i++) {
+                    const gridItem = $('<div>').addClass('grid-item').attr('draggable', true);
+                    gridItem.on('dragstart', dragStart);
+                    gridItem.on('dragover', dragOver);
+                    gridItem.on('drop', drop);
+                    gridItem.on('dragenter', dragEnter);
+                    gridItem.on('dragleave', dragLeave);
+
+                    // Add touch event listeners
+                    gridItem.on('touchstart', touchStart);
+                    gridItem.on('touchmove', touchMove);
+                    gridItem.on('touchend', touchEnd);
+
+                    gridContainer.append(gridItem);
+                }
+            };
+
+            const createRecipeItems = () => {
+                recipeImages.forEach((imageSrc, index) => {
+                    const recipeItem = $('<div>').addClass('recipe-item');
+                    const img = $('<img>').attr('src', imageSrc).attr('alt', `Item ${index + 1}`).addClass('no-click');
+                    recipeItem.append(img);
+                    recipeContainer.append(recipeItem);
+                    if (index < recipeImages.length - 1) {
+                        const arrow = $('<div>').addClass('recipe-arrow').text('→');
+                        recipeContainer.append(arrow);
+                    }
+                });
+            };
+
+            const placeRandomItems = () => {
+                const gridItems = $('.grid-item');
+                const placedIndexes = [];
+
+                // Define the specific items to spawn
+                const itemIndexMap = [
+                    { index: 4, count: 2 }, // Two items of the 5th type (index 4)
+                    { index: 0, count: 1 }, // One item of the 1st type (index 0)
+                    { index: 1, count: 1 }, // One item of the 2nd type (index 1)
+                    { index: 2, count: 1 }  // One item of the 3rd type (index 2)
+                ];
+
+                // Total number of items to place
+                const totalItemsToPlace = itemIndexMap.reduce((total, item) => total + item.count, 0);
+
+                // Spawn the specified items first
+                itemIndexMap.forEach(item => {
+                    for (let i = 0; i < item.count; i++) {
+                        let randomIndex;
+                        do {
+                            randomIndex = Math.floor(Math.random() * gridItems.length);
+                        } while (placedIndexes.includes(randomIndex));
+
+                        const itemUrl = items[item.index];
+                        const img = $('<img>').attr('src', itemUrl).attr('data-type', itemUrl.split('/').pop().split('.')[0]);
+                        $(gridItems[randomIndex]).append(img);
+                        animateEntrance(img);
+                        placedIndexes.push(randomIndex);
+                    }
+                });
+
+                // Only fill the grid up to the total specified number of items
+                while (placedIndexes.length < totalItemsToPlace) {
+                    const randomIndex = Math.floor(Math.random() * gridItems.length);
+                    if (!placedIndexes.includes(randomIndex)) {
+                        placedIndexes.push(randomIndex);
+                        const itemUrl = items[Math.floor(Math.random() * items.length)];
+                        const img = $('<img>').attr('src', itemUrl).attr('data-type', itemUrl.split('/').pop().split('.')[0]);
+                        $(gridItems[randomIndex]).append(img);
+                        animateEntrance(img);
+                    }
+                }
+            };
+
+            const animateEntrance = (element) => {
+                if (element) {
+                    element.css({
+                        opacity: '0',
+                        transform: 'scale(1) rotate(0deg)'
+                    }).show().animate({
+                        opacity: '1',
+                        transform: 'scale(1) rotate(0deg)'
+                    }, 500, 'easeInOutCubic');
+                }
+            };
+
+            const dragStart = (e) => {
+                const imgElement = $(e.target).find('img')[0];
+                if (imgElement) {
+                    e.originalEvent.dataTransfer.setData('text/plain', $(imgElement).attr('data-type'));
+                    e.originalEvent.dataTransfer.setData('text/html', $(imgElement).prop('outerHTML'));
+                    $(imgElement).addClass('dragging');
+                }
+            };
+
+            const dragOver = (e) => {
+                e.preventDefault();
+                $(e.target).closest('.grid-item').addClass('drag-over');
+            };
+
+            const dragEnter = (e) => {
+                e.preventDefault();
+                $(e.target).closest('.grid-item').addClass('drag-over');
+            };
+
+            const dragLeave = (e) => {
+                e.preventDefault();
+                $(e.target).closest('.grid-item').removeClass('drag-over');
+            };
+
+            const drop = (e) => {
+                e.preventDefault();
+                const draggedItemType = e.originalEvent.dataTransfer.getData('text/plain');
+                const draggedItemHTML = e.originalEvent.dataTransfer.getData('text/html');
+                handleDrop(e, draggedItemType, draggedItemHTML);
+            };
+
+            // Touch event handlers
+            let startTouch = null;
+            let currentTouch = null;
+            let originalParent = null; // Store original parent globally
+
+            const touchStart = (e) => {
+                e.preventDefault(); // Prevents scrolling on touch devices
+                const touch = e.originalEvent.touches[0];
+                const target = $(e.target).closest('.grid-item');
+                if (target.length > 0) {
+                    const imgElement = target.find('img')[0];
+                    if (imgElement) {
+                        $(imgElement).addClass('dragging');
+                        currentTouch = imgElement;
+                        originalParent = target; // Store original parent
+                        startTouch = { x: touch.clientX, y: touch.clientY };
+                    }
+                }
+            };
+
+            const touchMove = (e) => {
+                e.preventDefault(); // Prevents scrolling on touch devices
+                const touch = e.originalEvent.touches[0];
+                const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (target && $(target).hasClass('grid-item')) {
+                    $(target).addClass('drag-over');
+                } else {
+                    $('.grid-item').removeClass('drag-over');
+                }
+            };
+
+            const touchEnd = (e) => {
+                e.preventDefault(); // Prevents scrolling on touch devices
+                if (!currentTouch) return;
+
+                const touch = e.originalEvent.changedTouches[0];
+                const target = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (target && $(target).hasClass('grid-item')) {
+                    const draggedItemType = $(currentTouch).attr('data-type');
+                    const draggedItemHTML = $(currentTouch).prop('outerHTML');
+                    handleDrop({ target }, draggedItemType, draggedItemHTML);
+                }
+
+                if (!target || !$(target).hasClass('grid-item') || $(target).is(originalParent)) {
+                    // Restore original item if dropped on invalid location or same container
+                    originalParent.empty().append($(currentTouch).prop('outerHTML'));
+                    animateEntrance(originalParent.find('img'));
+                }
+
+                $(currentTouch).removeClass('dragging');
+                $('.grid-item').removeClass('drag-over');
+                currentTouch = null;
+                originalParent = null;
+            };
+
+            const handleDrop = (e, draggedItemType, draggedItemHTML) => {
+                const target = $(e.target).closest('.grid-item');
+                target.removeClass('drag-over');
+
+                const targetImg = target.find('img')[0];
+                const targetType = targetImg ? $(targetImg).attr('data-type') : null;
+
+                const draggingElement = $('.dragging');
+                const currentOriginalParent = originalParent || draggingElement.parent();
+
+                if (target[0] === currentOriginalParent[0]) {
+                    draggingElement.removeClass('dragging');
+                    return;
+                }
+
+                if (targetType && targetType === draggedItemType) {
+                    mergeItems(target, draggedItemType);
+                    currentOriginalParent.empty(); // Clear original parent only after merge
+                } else if (!targetType) {
+                    target.html(draggedItemHTML); // Move dragged item to target
+                    animateEntrance(target.find('img'));
+                    $('#drop-sound')[0].play();
+                    currentOriginalParent.empty(); // Clear original parent now
+                } else {
+                    // If target is occupied with a different item, revert dragging
+                    draggingElement.remove();
+                    currentOriginalParent.empty().append(draggedItemHTML);
+                    animateEntrance(currentOriginalParent.find('img'));
+                }
+
+                draggingElement.removeClass('dragging');
+            };
+
+            const mergeItems = (target, itemType) => {
+                const newItemType = getNextItem(itemType);
+                const newImg = $('<img>').attr('src', `https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/${newItemType}.jpg`).attr('data-type', newItemType);
+                target.empty().append(newImg);
+                animateEntrance(newImg);
+                createMergeParticles(target);
+                animateMoneyToAnchoredImage(target); // Call the new animation function
+                updateMergeCount(newItemType);
+                $('#merge-sound')[0].play();
+            };
+
+            const animateMoneyToAnchoredImage = (mergeTarget) => {
+                const moneyImgSrc = 'https://storage.googleapis.com/handler-reflections/PaparaMergeFolder/money.png';
+                const moneyImg = $('<img>', {
+                    src: moneyImgSrc,
+                    class: 'floating-money',
+                    css: {
+                        position: 'absolute',
+                        width: '40px',
+                        height: '40px',
+                        pointerEvents: 'none',
+                        zIndex: 1001,
+                    }
+                });
+
+                $('body').append(moneyImg);
+
+                const targetRect = mergeTarget[0].getBoundingClientRect();
+                const anchoredRect = $('#anchored-image')[0].getBoundingClientRect();
+
+                // Position the money image at the merge location
+                moneyImg.css({
+                    left: `${targetRect.left + targetRect.width / 2 - 20}px`,
+                    top: `${targetRect.top + targetRect.height / 2 - 20}px`,
+                });
+
+                // Animate the money image towards the anchored image
+                moneyImg.animate({
+                    left: `${anchoredRect.left + anchoredRect.width / 2 - 20}px`,
+                    top: `${anchoredRect.top + anchoredRect.height / 2 - 20}px`,
+                    width: '20px',
+                    height: '20px',
+                    opacity: 0.5,
+                }, {
+                    duration: 1000,
+                    easing: 'easeInOutCubic',
+                    complete: function () {
+                        moneyImg.remove(); // Remove the money image after animation completes
+                        animateAnchoredImage(); // Add punch scale animation to the anchored image
+                    }
+                });
+            };
+
+            const animateAnchoredImage = () => {
+                const anchoredImage = $('#anchored-image');
+                anchoredImage.addClass('punch-animation');
+                setTimeout(() => {
+                    anchoredImage.removeClass('punch-animation');
+                }, 300);
+            };
+
+            const getNextItem = (currentType) => {
+                const currentIndex = items.findIndex(item => item.includes(currentType));
+                return items[(currentIndex + 1) % items.length].split('/').pop().split('.')[0];
+            };
+
+            const createMergeParticles = (target) => {
+                const rect = target[0].getBoundingClientRect();
+                const canvas = $('<canvas>').attr({
+                    id: 'merge-particles',
+                    width: rect.width,
+                    height: rect.height
+                }).css({
+                    position: 'absolute',
+                    left: rect.left + 'px',
+                    top: rect.top + 'px',
+                    pointerEvents: 'none',
+                    zIndex: '1000'
+                });
+                $('body').append(canvas);
+
+                const ctx = canvas[0].getContext('2d');
+                const particles = [];
+                const particleCount = 30;
+
+                class Particle {
+                    constructor() {
+                        this.x = canvas[0].width / 2;
+                        this.y = canvas[0].height / 2;
+                        this.radius = Math.random() * 3 + 1;
+                        this.color = ['#FFD700', '#FF6347', '#4682B4'][Math.floor(Math.random() * 3)];
+                        this.velocity = {
+                            x: (Math.random() - 0.5) * 3,
+                            y: (Math.random() - 0.5) * 3
+                        };
+                        this.opacity = 1;
+                    }
+
+                    draw() {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = this.color;
+                        ctx.globalAlpha = this.opacity;
+                        ctx.fill();
+                    }
+
+                    update() {
+                        this.x += this.velocity.x;
+                        this.y += this.velocity.y;
+                        this.opacity -= 0.02;
+                        if (this.opacity <= 0) {
+                            this.opacity = 0;
+                        }
+                    }
+                }
+
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+
+                function animate() {
+                    ctx.clearRect(0, 0, canvas[0].width, canvas[0].height);
+                    particles.forEach((particle, index) => {
+                        if (particle.opacity > 0) {
+                            particle.update();
+                            particle.draw();
+                        } else {
+                            particles.splice(index, 1);
+                        }
+                    });
+                    if (particles.length > 0) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        canvas.remove();
+                    }
+                }
+
+                animate();
+            };
+
+            const updateMergeCount = (newItemType) => {
+                mergeCount++;
+                const mergeCountElement = $('#merge-count');
+                if (mergeCountElement) {
+                    mergeCountElement.text(mergeCount);
+                    if (newItemType === '3') {
+                        changeAnchoredImageAfterMerge(3);
+                    }
+                    if (newItemType === '4') {
+                        changeAnchoredImageAfterMerge(4);
+                        animateHideAndShowPopup();
+                    }
+                }
+            };
+
+            const animateHideAndShowPopup = () => {
+                $('.recommended-recipe, .game-container').css({
+                    transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                    transform: 'scale(0)',
+                    opacity: 0
+                });
+                setTimeout(showPopup, 200);
+            };
+
+            const showPopup = () => {
+                const popup = $('#popup');
+                if (popup) {
+                    $('#main-logo-container').hide(); // Hide the main logo container
+                    popup.show();
+                    $('#popup-sound')[0].play();
+                    $('#tutorial-hand').hide(); // Hide the tutorial hand when the popup is shown
+                    changeAnchoredImage(); // Make sure this function is defined below
+                    $('#close-popup').on('click', () => {
+                        popup.hide();
+                        revertAnchoredImage();
+                        $('#main-logo-container').show(); // Show the main logo container when popup closes
+                    });
+                    $('#invest-button').on('click', function() {
+                window.location.href = 'https://www.papara.com/'; // Gerçek yatırım bağlantısıyla değiştirin
+            });
+                    spawnPopupLogo(); // Call function to spawn logo in popup
+
+                    // Start the money rain animation
+                    createMoneyRain();
+                }
+            };
+function showInvestButton() {
+                $('.invest-button-container').css('display', 'block');
+                $('.invest-button').addClass('animated bounce');
+            }
+
+            const createMoneyRain = () => {
+                const numberOfMoney = 20; // Number of falling money images
+
+                for (let i = 0; i < numberOfMoney; i++) {
+                    const money = $('<img>', {
+                        src: moneyImageSrc,
+                        class: 'falling-money'
+                    }).css({
+                        left: `${Math.random() * 100}vw`, // Random horizontal position
+                        animationDuration: `${Math.random() * 2 + 3}s`, // Random duration between 3 and 5 seconds
+                        animationDelay: `${Math.random() * 2}s` // Random delay up to 2 seconds
+                    });
+
+                    $('body').append(money);
+
+                    // Remove the element after the animation ends
+                    money.on('animationend', () => {
+                        money.remove();
+                    });
+                }
+            };
+
+            const spawnPopupLogo = () => {
+                const logoClone = $('#logo').clone().css({
+                    width: '160%',
+                    height: 'auto',
+                    position: 'absolute',
+                    top: '-150px',
+                    left: '-40%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 1100,
+                });
+                $('#popup-logo').empty().append(logoClone);
+            };
+
+            const changeAnchoredImageAfterMerge = (index) => {
+                const anchoredImage = $('#anchored-image');
+                if (anchoredImage) {
+                    if (index === 3) {
+                        anchoredImage.attr('src', character1Img);
+                    } else if (index === 4) {
+                        anchoredImage.attr('src', character2Img);
+                    }
+                    anchoredImage.addClass('punch-animation');
+                    setTimeout(() => {
+                        anchoredImage.removeClass('punch-animation');
+                    }, 300);
+                }
+            };
+
+            const changeAnchoredImage = () => {
+                // Define the behavior of the function here, for example:
+                const anchoredImage = $('#anchored-image');
+                if (anchoredImage) {
+                    anchoredImage.attr('src', character2Img); // Example action, modify as needed
+                    anchoredImage.addClass('punch-animation');
+                    setTimeout(() => {
+                        anchoredImage.removeClass('punch-animation');
+                    }, 300);
+                }
+            };
+
+            const revertAnchoredImage = () => {
+                const anchoredImage = $('#anchored-image');
+                if (anchoredImage) {
+                    anchoredImage.attr('src', character2Img);
+                    anchoredImage.addClass('punch-animation');
+                    setTimeout(() => {
+                        anchoredImage.removeClass('punch-animation');
+                    }, 300);
+                }
+            };
+
+            const createTutorial = () => {
+                setTimeout(() => {
+                    const gridItems = document.querySelectorAll('.grid-item img');
+                    if (gridItems.length > 0) {
+                        animateTutorialHand();
+                    }
+                }, 3000);
+            };
+
+            const animateTutorialHand = () => {
+                const hand = $('#tutorial-hand');
+                const gridItems = $('.grid-item img');
+                let startItem, endItem;
+
+                if (!hand) return;
+
+                // Find two matching items
+                for (let i = 0; i < gridItems.length; i++) {
+                    for (let j = i + 1; j < gridItems.length; j++) {
+                        if ($(gridItems[i]).attr('src') === $(gridItems[j]).attr('src')) {
+                            startItem = $(gridItems[i]).parent();
+                            endItem = $(gridItems[j]).parent();
+                            break;
+                        }
+                    }
+                    if (startItem) break;
+                }
+
+                if (startItem && endItem) {
+                    const startRect = startItem[0].getBoundingClientRect();
+                    const endRect = endItem[0].getBoundingClientRect();
+
+                    // Position the hand over the starting item
+                    hand.css({
+                        transition: 'none',
+                        left: `${startRect.left + startRect.width / 2 - 25}px`,
+                        top: `${startRect.top + startRect.height / 2 - 25}px`,
+                        opacity: '1'
+                    });
+
+                    // Animate the hand to the end item
+                    setTimeout(() => {
+                        hand.css({
+                            transition: 'all 1s ease-in-out',
+                            left: `${endRect.left + endRect.width / 2 - 25}px`,
+                            top: `${endRect.top + endRect.height / 2 - 25}px`
+                        });
+                    }, 100);
+
+                    // Restart animation
+                    setTimeout(() => {
+                        hand.css('opacity', '0');
+                        setTimeout(() => {
+                            animateTutorialHand();
+                        }, 1000);
+                    }, 1500);
+                } else {
+                    // Retry if no matching items are found
+                    setTimeout(() => {
+                        animateTutorialHand();
+                    }, 1000);
+                }
+            };
+
+            createGridItems();
+            placeRandomItems();
+            createRecipeItems();
+            createTutorial(); // Start the tutorial
+        });
+    </script>
 </body>
 </html>
